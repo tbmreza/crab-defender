@@ -6,15 +6,16 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
-        // .add_system(sprite_movement)
-        .add_system(keyboard_input_system)
+        .add_system(crab_movement)
         .run();
 }
 
 #[derive(Component)]
 enum Direction {
     Up,
+    Left,
     Down,
+    Right,
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -28,38 +29,38 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(Direction::Up);
 }
 
-/// The sprite is animated by changing its translation depending on the time that has passed since
-/// the last frame.
-fn sprite_movement(time: Res<Time>, mut sprite_position: Query<(&mut Direction, &mut Transform)>) {
-    for (mut logo, mut transform) in &mut sprite_position {
-        match *logo {
-            Direction::Up => transform.translation.y += 150. * time.delta_seconds(),
-            Direction::Down => transform.translation.y -= 150. * time.delta_seconds(),
-        }
-
-        if transform.translation.y > 200. {
-            *logo = Direction::Down;
-        } else if transform.translation.y < -200. {
-            *logo = Direction::Up;
-        }
-    }
-}
-
-fn move_up() {
-    info!("'W' just pressed");
-}
-
-/// This system prints 'A' key state
-fn keyboard_input_system(keyboard_input: Res<Input<KeyCode>>) {
+fn pressed_keycode(keyboard_input: &Res<Input<KeyCode>>) -> Option<KeyCode> {
     if keyboard_input.pressed(KeyCode::W) {
-        move_up();
+        return Some(KeyCode::W);
+    } else if keyboard_input.pressed(KeyCode::A) {
+        return Some(KeyCode::A);
+    } else if keyboard_input.pressed(KeyCode::S) {
+        return Some(KeyCode::S);
+    } else if keyboard_input.pressed(KeyCode::D) {
+        return Some(KeyCode::D);
     }
+    None
+}
 
-    // if keyboard_input.pressed(KeyCode::A) {
-    //     moveLeft();
-    // }
-    //
-    // if keyboard_input.pressed(KeyCode::S) {
-    //     moveDown();
-    // }
+fn crab_movement(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut sprite_position: Query<(&mut Direction, &mut Transform)>,
+) {
+    for (mut control, mut transform) in &mut sprite_position {
+        let units = 4.;
+        match *control {
+            Direction::Up => transform.translation.y += units,
+            Direction::Left => transform.translation.x -= units,
+            Direction::Down => transform.translation.y -= units,
+            Direction::Right => transform.translation.x += units,
+        }
+
+        match pressed_keycode(&keyboard_input) {
+            Some(KeyCode::W) => *control = Direction::Up,
+            Some(KeyCode::A) => *control = Direction::Left,
+            Some(KeyCode::S) => *control = Direction::Down,
+            Some(KeyCode::D) => *control = Direction::Right,
+            _ => {}
+        }
+    }
 }
