@@ -1,13 +1,14 @@
 //! Renders a 2D scene containing a single, moving sprite.
 
 use bevy::prelude::*;
-use crab_defender::systems::{Direction, crab_movement};
+use crab_defender::systems::{Direction, *};
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
         .add_system(crab_movement)
+        .add_system(game_over)
         .run();
 }
 
